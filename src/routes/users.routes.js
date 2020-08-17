@@ -42,4 +42,4 @@ router.delete('/:id', deleteUser);
 // update user by ID
 router.put('/:id', upload.single('profile-img-url'), updateUserInfo);
 
-module.exports = router;
+export default router;
