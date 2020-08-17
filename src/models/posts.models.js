@@ -5,8 +5,7 @@ let posts = [
 		author: 'Jules NTARE',
 		title: 'JS new features',
 		desc: 'lorem ipsum',
-		'cover-imgUrl':
-			'https://firebasestorage.googleapis.com/v0/b/portfolio-db-d0d5c.appspot.com/o/images%2Ftimerate.PNG?alt=media&token=2fda0eb1-7f43-4e87-b2b5-1396c3d40b5e',
+		'cover-imgUrl': null,
 		likes: 1,
 		comments: [{ author: 'johndoe@gmail.com', desc: 'nice post', 'replied-at': new Date() }],
 		state: 'published',
@@ -16,8 +15,7 @@ let posts = [
 		author: 'John Doe',
 		title: 'What is Programming',
 		desc: 'lorem ipsum',
-		'cover-imgUrl':
-			'https://firebasestorage.googleapis.com/v0/b/portfolio-db-d0d5c.appspot.com/o/images%2Ftimerate.PNG?alt=media&token=2fda0eb1-7f43-4e87-b2b5-1396c3d40b5e',
+		'cover-imgUrl': null,
 		likes: 10,
 		comments: [{ author: 'julentare@gmail.com', desc: 'nice post', 'replied-at': new Date() }],
 		state: 'published',

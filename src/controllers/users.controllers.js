@@ -35,7 +35,7 @@ const deleteUser = (req, res) => {
 const updateUserInfo = (req, res) => {
 	let id = req.params.id;
 	let found = users.find((user) => user.id === id);
-	users.splice(users.indexOf(found), 1, { ...found, ...req.body });
+	users.splice(users.indexOf(found), 1, { ...found, ...req.body, [req.file.fieldname]: req.file.originalname });
 	res.send(users);
 };
 

@@ -17,7 +17,7 @@ const createPost = (req, res) => {
 	newPost['author'] = req.body.author;
 	newPost['title'] = req.body.title;
 	newPost['desc'] = req.body.desc;
-	newPost['cover-imgurl'] = null;
+	newPost['cover-imgUrl'] = req.file.originalname | null;
 	newPost['likes'] = 0;
 	newPost['comments'] = [];
 	newPost['state'] = 'published';
@@ -36,7 +36,7 @@ const deletePost = (req, res) => {
 const updatePostInfo = (req, res) => {
 	let id = req.params.id;
 	let found = posts.find((post) => post.id === id);
-	posts.splice(posts.indexOf(found), 1, { ...found, ...req.body });
+	posts.splice(posts.indexOf(found), 1, { ...found, ...req.body, [req.file.fieldname]: req.file.originalname });
 	res.send(posts);
 };
 

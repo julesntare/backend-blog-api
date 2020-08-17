@@ -3,17 +3,29 @@ const router = express.Router();
 let multer = require('multer');
 import { getAllUsers, getUserById, createUser, deleteUser, updateUserInfo } from '../controllers/users.controllers';
 
-// SET STORAGE
-let storage = multer.diskStorage({
+const DIR = './src/uploads';
+
+const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, 'src/uploads/');
+		cb(null, DIR);
 	},
 	filename: (req, file, cb) => {
-		cb(null, file.fieldname);
+		const fileName = file.originalname;
+		cb(null, fileName);
 	},
 });
 
-let upload = multer({ storage: storage });
+let upload = multer({
+	storage: storage,
+	fileFilter: (req, file, cb) => {
+		if (file.mimetype == 'image/png' || file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg') {
+			cb(null, true);
+		} else {
+			cb(null, false);
+			return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
+		}
+	},
+});
 
 // get all users
 router.get('/', getAllUsers);
@@ -30,4 +42,4 @@ router.delete('/:id', deleteUser);
 // update user by ID
 router.put('/:id', upload.single('profile-img-url'), updateUserInfo);
 
-module.exports = router;
+export default router;
