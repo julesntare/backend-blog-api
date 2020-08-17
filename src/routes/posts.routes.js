@@ -1,7 +1,16 @@
 const express = require('express');
 const router = express.Router();
 let multer = require('multer');
-import { getAllPosts, getPostById, createPost, deletePost, updatePostInfo } from '../controllers/posts.controllers';
+import {
+	getAllPosts,
+	getPostById,
+	createPost,
+	deletePost,
+	updatePostInfo,
+	addComment,
+	deleteComment,
+	updateComment,
+} from '../controllers/posts.controllers';
 
 // SET STORAGE
 let storage = multer.diskStorage({
@@ -29,5 +38,14 @@ router.delete('/:id', deletePost);
 
 // update post by ID
 router.put('/:id', upload.single('cover-imgurl'), updatePostInfo);
+
+// add comment on post
+router.patch('/:id/comment/', addComment);
+
+// add comment on post
+router.patch('/:id/comment/:cid', deleteComment);
+
+// edit comment on post
+router.patch('/:id/editcomment/:cid', updateComment);
 
 module.exports = router;

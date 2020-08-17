@@ -40,10 +40,42 @@ const updatePostInfo = (req, res) => {
 	res.send(posts);
 };
 
+const addComment = (req, res) => {
+	let id = req.params.id;
+	let found = posts.find((post) => post.id === id);
+	found.comments.unshift({
+		'replied-at': new Date(),
+		...req.body,
+	});
+	found = posts.map((post) => ({ ...found, ...post }));
+	res.send(found);
+};
+
+const deleteComment = (req, res) => {
+	let id = req.params.id;
+	let cid = req.params.cid;
+	let found = posts.find((post) => post.id === id);
+	found.comments.splice(found.comments[cid - 1], 1);
+	found = posts.map((post) => ({ ...found, ...post }));
+	res.send(posts);
+};
+
+const updateComment = (req, res) => {
+	let id = req.params.id;
+	let cid = req.params.cid;
+	let found = posts.find((post) => post.id === id);
+	found.comments.splice(found.comments[cid - 1], 1, { ...found.comments[cid - 1], ...req.body });
+	found = posts.map((post) => ({ ...found, ...post }));
+	res.send(posts);
+};
+
 module.exports = {
 	getAllPosts,
 	getPostById,
 	createPost,
 	deletePost,
 	updatePostInfo,
+	addComment,
+	deleteComment,
+	updateComment,
 };
