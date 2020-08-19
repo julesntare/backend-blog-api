@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 let multer = require('multer');
 import { getAllUsers, getUserById, createUser, deleteUser, updateUserInfo } from '../controllers/users.controllers';
+import verifyAuth from '../middlewares/auth';
 
 const DIR = './src/uploads';
-
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, DIR);
@@ -28,7 +28,7 @@ let upload = multer({
 });
 
 // get all users
-router.get('/', getAllUsers);
+router.get('/', verifyAuth, getAllUsers);
 
 // get specific user by ID
 router.get('/:id', getUserById);
@@ -42,4 +42,4 @@ router.delete('/:id', deleteUser);
 // update user by ID
 router.put('/:id', upload.single('profile-img-url'), updateUserInfo);
 
-export default router;
+module.exports = router;

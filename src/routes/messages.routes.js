@@ -14,4 +14,4 @@ router.post('/', createMsg);
 // delete message by ID
 router.delete('/:id', deleteMsg);
 
-export default router;
+module.exports = router;
