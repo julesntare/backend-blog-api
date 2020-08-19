@@ -60,4 +60,4 @@ router.patch('/:id/comment/:cid', deleteComment);
 // edit comment on post
 router.patch('/:id/editcomment/:cid', updateComment);
 
-export default router;
+module.exports = router;
