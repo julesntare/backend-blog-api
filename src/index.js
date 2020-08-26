@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-	res.status(200).send({ msg: 'Welcome to my Blog API' });
+	res.send('Welcome to my Blog API');
 });
 app.use('/users', UserRoutes);
 app.use('/posts', PostRoutes);
