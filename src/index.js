@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
-	res.send('hello world');
+	res.status(200).send({ msg: 'Welcome to my Blog API' });
 });
 app.use('/users', UserRoutes);
 app.use('/posts', PostRoutes);
@@ -20,3 +20,5 @@ app.use('/messages', MsgRoutes);
 app.listen(port, () => {
 	console.log(`app initialized on port ${port}`);
 });
+
+export default app;
