@@ -39,7 +39,7 @@ describe('GET /users/id', () => {
 	});
 });
 
-describe('POST /users', () => {
+describe('POST /users/register', () => {
 	it('should add a SINGLE user', (done) => {
 		chai.request(app)
 			.post('/users/register')
