@@ -40,7 +40,6 @@ describe('GET /users/id', () => {
 });
 
 describe('POST /users/register', () => {
-<<<<<<< HEAD
 	// it('should add a SINGLE user', (done) => {
 	// 	chai.request(app)
 	// 		.post('/users/register')
@@ -56,23 +55,6 @@ describe('POST /users/register', () => {
 	// 			done();
 	// 		});
 	// });
-=======
-	it('should add a SINGLE user', (done) => {
-		chai.request(app)
-			.post('/users/register')
-			.send({
-				firstname: faker.name.firstName(),
-				lastname: faker.name.lastName(),
-				email: faker.internet.email(),
-				password: faker.internet.password(),
-			})
-			.end((err, res) => {
-				if (err) return done(err);
-				expect(res).to.have.status(200);
-				done();
-			});
-	});
->>>>>>> 4149a885954ba2b15ba653f3dc1dd3f18cd4c57c
 
 	it('should not add user with empty data', (done) => {
 		chai.request(app)
