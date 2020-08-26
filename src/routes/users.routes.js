@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
 let multer = require('multer');
-import { getAllUsers, getUserById, createUser, deleteUser, updateUserInfo } from '../controllers/users.controllers';
+import {
+	getAllUsers,
+	getUserById,
+	createUser,
+	deleteUser,
+	updateUserInfo,
+	loginUser,
+} from '../controllers/users.controllers';
 import verifyAuth from '../middlewares/auth';
 
 const DIR = './src/uploads';
@@ -14,7 +21,6 @@ const storage = multer.diskStorage({
 		cb(null, fileName);
 	},
 });
-
 let upload = multer({
 	storage: storage,
 	fileFilter: (req, file, cb) => {
@@ -28,13 +34,16 @@ let upload = multer({
 });
 
 // get all users
-router.get('/', verifyAuth, getAllUsers);
+router.get('/', getAllUsers);
 
 // get specific user by ID
 router.get('/:id', getUserById);
 
 // create user
-router.post('/', createUser);
+router.post('/register', createUser);
+
+// login user
+router.post('/login', verifyAuth, loginUser);
 
 // delete user by ID
 router.delete('/:id', deleteUser);

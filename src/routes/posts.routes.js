@@ -8,12 +8,12 @@ import {
 	deletePost,
 	updatePostInfo,
 	addComment,
+	getComments,
 	deleteComment,
 	updateComment,
 } from '../controllers/posts.controllers';
 
 const DIR = './src/posts-images';
-
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
 		cb(null, DIR);
@@ -43,13 +43,16 @@ router.get('/', getAllPosts);
 router.get('/:id', getPostById);
 
 // create post
-router.post('/', createPost);
+router.post('/', upload.single('cover-imgUrl'), createPost);
 
 // delete post by ID
 router.delete('/:id', deletePost);
 
 // update post by ID
 router.put('/:id', upload.single('cover-imgUrl'), updatePostInfo);
+
+// get comments on post
+router.get('/:id/comments/', getComments);
 
 // add comment on post
 router.patch('/:id/comment/', addComment);

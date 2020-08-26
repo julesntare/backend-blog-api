@@ -2,11 +2,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 let users = [
 	{
+		id: 'c55dee33-fd60-4011-a90c-b1bfeacbe8ea',
 		firstname: 'Jules',
 		lastname: 'NTARE',
 		email: 'julesntare@gmail.com',
-		'profile-img-url':
-			'https://firebasestorage.googleapis.com/v0/b/portfolio-db-d0d5c.appspot.com/o/images%2Fcontactme-bg.jpg?alt=media&token=f703f173-edaa-4056-8b9f-5de071056656',
+		'profile-img-url': null,
 		password: 'dgddgg',
 		location: 'Kigali, muhima, KN88st',
 		bio: 'Software Engineer',
@@ -15,11 +15,11 @@ let users = [
 		joined: new Date(),
 	},
 	{
+		id: 'c55dee33-fd60-4011-a90c-b1bfeacbe8eq',
 		firstname: 'John',
 		lastname: 'Doe',
 		email: 'johndoe@gmail.com',
-		'profile-img-url':
-			'https://firebasestorage.googleapis.com/v0/b/portfolio-db-d0d5c.appspot.com/o/images%2Fcontactme-bg.jpg?alt=media&token=f703f173-edaa-4056-8b9f-5de071056656',
+		'profile-img-url': null,
 		password: 'dnajkdnwk',
 		location: 'London NW1 6XE',
 		bio: 'CEO',
