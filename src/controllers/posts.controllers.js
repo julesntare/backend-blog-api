@@ -47,13 +47,13 @@ const createPost = (req, res) => {
 			if (image) {
 				newPost['cover-imgUrl'] = image.url;
 				posts.push(newPost);
-				res.send(posts);
+				res.status(200).send(posts);
 			}
 		});
 	} else {
 		newPost['cover-imgUrl'] = null;
 		posts.push(newPost);
-		res.send(posts);
+		res.status(200).send(posts);
 	}
 };
 
@@ -99,6 +99,9 @@ const addComment = (req, res) => {
 	if (found == undefined) {
 		return res.status(500).json({ msg: 'no post to comment' });
 	}
+	if (Object.keys(req.body).length === 0) {
+		return res.status(500).json({ msg: 'provide data' });
+	}
 	found.comments.unshift({
 		id: uuidv4(),
 		'replied-at': new Date(),
@@ -111,16 +114,38 @@ const addComment = (req, res) => {
 const getComments = (req, res) => {
 	let id = req.params.id;
 	let found = posts.find((post) => post.id === id);
+	if (found == undefined) {
+		return res.status(500).json({ msg: 'unavailable post' });
+	}
 	res.status(200).json({ total: found.comments.length, comments: found.comments });
+};
+
+const getCommentById = (req, res) => {
+	let id = req.params.id;
+	let cid = req.params.cid;
+	let found = posts.find((post) => post.id === id);
+	let commentFound = found.comments.find((comment) => comment.id === cid);
+	if (found == undefined) {
+		return res.status(500).json({ msg: 'unavailable post' });
+	}
+	if (commentFound == undefined) {
+		return res.status(404).json({ msg: 'no comment found' });
+	}
+	res.status(200).json(commentFound);
 };
 
 const deleteComment = (req, res) => {
 	let id = req.params.id;
 	let cid = req.params.cid;
 	let found = posts.find((post) => post.id === id);
+	let commentFound = found.comments.find((comment) => comment.id === cid);
 	if (found == undefined) {
-		return res.status(500).json({ msg: 'no comment to delete' });
+		return res.status(404).json({ msg: 'unavailable post' });
 	}
+	if (commentFound == undefined) {
+		return res.status(404).json({ msg: 'no comment found' });
+	}
+
 	found.comments.splice(found.comments[cid - 1], 1);
 	found = posts.map((post) => ({ ...found, ...post }));
 	res.status(200).json(posts);
@@ -130,9 +155,19 @@ const updateComment = (req, res) => {
 	let id = req.params.id;
 	let cid = req.params.cid;
 	let found = posts.find((post) => post.id === id);
+	let commentFound = found.comments.find((comment) => comment.id === cid);
+	if (Object.keys(req.body).length == 0) {
+		return res.status(404).json({ msg: 'provide comment' });
+	}
+	if (found == undefined) {
+		return res.status(404).json({ msg: 'unavailable post' });
+	}
+	if (commentFound == undefined) {
+		return res.status(404).json({ msg: 'no comment found' });
+	}
 	found.comments.splice(found.comments[cid - 1], 1, { ...found.comments[cid - 1], ...req.body });
 	found = posts.map((post) => ({ ...found, ...post }));
-	res.send(posts);
+	res.status(200).json(posts);
 };
 
 module.exports = {
@@ -143,6 +178,7 @@ module.exports = {
 	updatePostInfo,
 	addComment,
 	getComments,
+	getCommentById,
 	deleteComment,
 	updateComment,
 };
