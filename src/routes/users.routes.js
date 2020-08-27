@@ -8,6 +8,7 @@ import {
 	deleteUser,
 	updateUserInfo,
 	loginUser,
+	changePassword,
 } from '../controllers/users.controllers';
 import verifyAuth from '../middlewares/auth';
 
@@ -50,5 +51,8 @@ router.delete('/:id', deleteUser);
 
 // update user by ID
 router.put('/:id', upload.single('profile-img-url'), updateUserInfo);
+
+// change password
+router.put('/:id/changepass', changePassword);
 
 module.exports = router;

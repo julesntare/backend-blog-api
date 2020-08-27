@@ -9,6 +9,7 @@ import {
 	updatePostInfo,
 	addComment,
 	getComments,
+	getCommentById,
 	deleteComment,
 	updateComment,
 } from '../controllers/posts.controllers';
@@ -54,10 +55,13 @@ router.put('/:id', upload.single('cover-imgUrl'), updatePostInfo);
 // get comments on post
 router.get('/:id/comments/', getComments);
 
+// get specific comment on post
+router.get('/:id/comments/:cid', getCommentById);
+
 // add comment on post
 router.patch('/:id/comment/', addComment);
 
-// add comment on post
+// delete comment on post
 router.patch('/:id/comment/:cid', deleteComment);
 
 // edit comment on post
