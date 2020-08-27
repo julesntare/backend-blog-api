@@ -7,7 +7,7 @@ let users = [
 		lastname: 'NTARE',
 		email: 'julesntare@gmail.com',
 		'profile-img-url': null,
-		password: 'dgddgg',
+		password: '4JLAj6B9pRMdhRiXhJOkRjlPMDkIxYoKrEp2j4Qgz7c=',
 		location: 'Kigali, muhima, KN88st',
 		bio: 'Software Engineer',
 		noOfEntries: 0,
