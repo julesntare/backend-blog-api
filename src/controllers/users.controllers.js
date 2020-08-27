@@ -117,8 +117,6 @@ const changePassword = (req, res) => {
 	let id = req.params.id;
 	let { currpass, newpass, cpass } = req.body;
 	let found = users.find((user) => user.id === id);
-	console.log(found.password);
-	console.log(getHashedPassword(currpass));
 	if (Object.keys(req.body).length === 0) {
 		return res.status(500).json({ msg: 'Provide some data' });
 	}
