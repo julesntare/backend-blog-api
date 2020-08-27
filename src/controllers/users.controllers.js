@@ -35,7 +35,7 @@ const createUser = (req, res) => {
 	let newUser = {};
 	let { firstname, lastname, email, password } = req.body;
 
-	let checkUser = users.filter((user) => user.email === email);
+	const checkUser = users.filter((user) => user.email === email);
 	if (checkUser.length > 0) {
 		return res.status(409).json({ message: 'Email already in use' });
 	}
@@ -62,15 +62,15 @@ const loginUser = (req, res) => {
 	let { email, password } = req.body;
 	password = getHashedPassword(password);
 	let loginInfo = users.filter((user) => user.email === email);
+	email = loginInfo[0].email;
+	let level = loginInfo[0].level;
+	let token = jwt.sign({ email, level }, SECRET_KEY, { algorithm: 'HS256' });
 	if (loginInfo.length === 0) {
 		return res.status(404).json({ message: 'User not Found' });
 	}
 	if (getHashedPassword(loginInfo[0].password) !== getHashedPassword(password)) {
 		return res.status(404).json({ message: 'Invalid Password' });
 	}
-	email = loginInfo[0].email;
-	let level = loginInfo[0].level;
-	let token = jwt.sign({ email, level }, SECRET_KEY, { algorithm: 'HS256' });
 	res.status(200).json({ data: loginInfo, token });
 };
 
@@ -88,12 +88,15 @@ const updateUserInfo = (req, res) => {
 	let id = req.params.id;
 	let found = users.find((user) => user.id === id);
 	if (found === undefined) {
-		return res.status(404).json({ msg: 'No user to edit' });
+		return res.status(500).json({ msg: 'No user to edit' });
+	}
+	if (req.body.password) {
+		return res.status(404).json({ msg: "can't change password" });
 	}
 	if (req.file) {
 		const path = req.file.path;
-		cloudinary.uploader.upload(path, function (err, image) {
-			if (err) return res.send(err);
+		cloudinary.uploader.upload(path, (err, image) => {
+			if (err) return res.status(404).json(err);
 			const fs = require('fs');
 			fs.unlinkSync(path);
 			if (image) {
@@ -105,14 +108,32 @@ const updateUserInfo = (req, res) => {
 			}
 		});
 	} else {
-		if (req.body.password) {
-			let salt = crypto.randomBytes(16).toString('base64');
-			let hash = crypto.createHmac('sha512', salt).update(req.body.password).digest('base64');
-			req.body.password = salt + '$' + hash;
-		}
 		users.splice(users.indexOf(found), 1, { ...found, ...req.body });
 	}
-	res.json(users);
+	res.status(200).json(users);
+};
+
+const changePassword = (req, res) => {
+	let id = req.params.id;
+	let { currpass, newpass, cpass } = req.body;
+	let found = users.find((user) => user.id === id);
+	console.log(found.password);
+	console.log(getHashedPassword(currpass));
+	if (Object.keys(req.body).length === 0) {
+		return res.status(500).json({ msg: 'Provide some data' });
+	}
+	if (found === undefined) {
+		return res.status(500).json({ msg: 'No user found' });
+	}
+	if (getHashedPassword(currpass) != found.password) {
+		return res.status(404).json({ msg: 'invalid current password' });
+	}
+	if (newpass != cpass) {
+		return res.status(500).json({ msg: 'new password not match' });
+	}
+	req.body.password = getHashedPassword(newpass);
+	users.splice(users.indexOf(found), 1, { ...found, ...req.body });
+	res.status(200).json(found);
 };
 
 module.exports = {
@@ -122,4 +143,5 @@ module.exports = {
 	deleteUser,
 	updateUserInfo,
 	loginUser,
+	changePassword,
 };
