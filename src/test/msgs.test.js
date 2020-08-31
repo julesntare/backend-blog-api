@@ -5,36 +5,112 @@ import app from '../index';
 import faker from 'faker';
 chai.use(chaiHttp);
 
+let token, msgId;
 describe('========== Messages APIs Tests ==========', () => {
-	describe('GET /messages', () => {
-		it('should list ALL messages', (done) => {
+	describe('POST /users/register', () => {
+		it('should return 200', (done) => {
 			chai.request(app)
-				.get('/messages')
+				.post('/users/register')
+				.send({
+					firstname: faker.name.firstName(),
+					lastname: faker.name.lastName(),
+					email: faker.internet.email(),
+					password: 'hUhU1!',
+					cpassword: 'hUhU1!',
+				})
 				.end((err, res) => {
-					if (err) return done(err);
 					expect(res).to.have.status(200);
-					res.body.should.be.a('array');
+					token = res.body.token;
 					done();
 				});
 		});
-	});
 
-	describe('GET /messages/id', () => {
-		it('should list a SINGLE message with id', () => {
-			let param = 'c55dee33-fd60-4011-a90c-b1bfeacbe8ea';
+		it('should not accept empty body', (done) => {
 			chai.request(app)
-				.get('/messages/' + param)
+				.post('/users/register')
+				.send({})
 				.end((err, res) => {
-					expect(res).to.have.status(200);
+					expect(res).to.have.status(409);
+					done();
 				});
 		});
-		it('should not list message with unavailable id', (done) => {
-			let param = 123;
+
+		it('should not accept bad firstname', (done) => {
 			chai.request(app)
-				.get('/messages/' + param)
+				.post('/users/register')
+				.send({
+					firstname: 'ds',
+					lastname: faker.name.lastName(),
+					email: faker.internet.email(),
+					password: 'hUhU1!',
+					cpassword: 'hUhU1!',
+				})
 				.end((err, res) => {
-					expect(res).to.have.status(404);
-					expect(res.body).to.deep.equal({ msg: 'no message available' });
+					expect(res).to.have.status(403);
+					done();
+				});
+		});
+
+		it('should not accept bad lastname', (done) => {
+			chai.request(app)
+				.post('/users/register')
+				.send({
+					firstname: faker.name.firstName(),
+					lastname: 's',
+					email: faker.internet.email(),
+					password: 'hUhU1!',
+					cpassword: 'hUhU1!',
+				})
+				.end((err, res) => {
+					expect(res).to.have.status(403);
+					done();
+				});
+		});
+
+		it('should not accept bad email', (done) => {
+			chai.request(app)
+				.post('/users/register')
+				.send({
+					firstname: faker.name.firstName(),
+					lastname: faker.name.firstName(),
+					email: 'dsafs',
+					password: 'hUhU1!',
+					cpassword: 'hUhU1!',
+				})
+				.end((err, res) => {
+					expect(res).to.have.status(403);
+					done();
+				});
+		});
+
+		it('should not accept bad password', (done) => {
+			chai.request(app)
+				.post('/users/register')
+				.send({
+					firstname: faker.name.firstName(),
+					lastname: faker.name.firstName(),
+					email: faker.internet.email(),
+					password: 'ds',
+					cpassword: 'hUhU1!',
+				})
+				.end((err, res) => {
+					expect(res).to.have.status(403);
+					done();
+				});
+		});
+
+		it('should not accept unmatch password', (done) => {
+			chai.request(app)
+				.post('/users/register')
+				.send({
+					firstname: faker.name.firstName(),
+					lastname: faker.name.firstName(),
+					email: faker.internet.email(),
+					password: 'hUhU1!',
+					cpassword: 'hUhUdsa!',
+				})
+				.end((err, res) => {
+					expect(res).to.have.status(403);
 					done();
 				});
 		});
@@ -51,7 +127,8 @@ describe('========== Messages APIs Tests ==========', () => {
 				})
 				.end((err, res) => {
 					if (err) return done(err);
-					expect(res).to.have.status(200);
+					msgId = res.body.msgData._id;
+					expect(res).to.have.status(201);
 					done();
 				});
 		});
@@ -67,20 +144,70 @@ describe('========== Messages APIs Tests ==========', () => {
 		});
 	});
 
-	describe('DELETE /messages/id', () => {
-		it('should delete a SINGLE message with id', () => {
-			let param = 'c55dee33-fd60-4011-a90c-b1bfeacbe8ea';
+	describe('GET /messages', () => {
+		it('should not allow access to unauthanticated', (done) => {
 			chai.request(app)
-				.delete('/messages/' + param)
+				.get('/messages')
+				.set('authorization', 'sabjkvbskjbasjkvjbaskvjbasvkasbk')
+				.end((err, res) => {
+					if (err) return done(err);
+					expect(res).to.have.status(401);
+					done();
+				});
+		});
+
+		it('should list ALL messages', (done) => {
+			chai.request(app)
+				.get('/messages')
+				.set('authorization', `Bearer ${token}`)
+				.end((err, res) => {
+					if (err) return done(err);
+					expect(res).to.have.status(200);
+					res.body.should.be.a('array');
+					done();
+				});
+		});
+	});
+
+	describe('GET /messages/id', () => {
+		it('should list a SINGLE message with id', () => {
+			let param = msgId;
+			chai.request(app)
+				.get('/messages/' + param)
+				.set('authorization', `Bearer ${token}`)
 				.end((err, res) => {
 					expect(res).to.have.status(200);
 				});
 		});
+		it('should not list message with unavailable id', (done) => {
+			let param = '5f48239f320eae39146402';
+			chai.request(app)
+				.get('/messages/' + param)
+				.set('authorization', `Bearer ${token}`)
+				.end((err, res) => {
+					expect(res).to.have.status(404);
+					expect(res.body).to.deep.equal({ msg: 'no message available' });
+					done();
+				});
+		});
+	});
 
-		it('should not delete unavailable message', (done) => {
-			const param = 123;
+	describe('DELETE /messages/id', () => {
+		it('should delete a SINGLE message with id', () => {
+			let param = msgId;
 			chai.request(app)
 				.delete('/messages/' + param)
+				.set('authorization', `Bearer ${token}`)
+				.end((err, res) => {
+					expect(res).to.have.status(204);
+				});
+		});
+
+		it('should not delete unavailable message', (done) => {
+			const param = '123';
+			chai.request(app)
+				.delete('/messages/' + param)
+				.set('authorization', `Bearer ${token}`)
 				.end((err, res) => {
 					if (err) return done(err);
 					expect(res).to.have.status(404);
