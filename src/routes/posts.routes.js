@@ -13,6 +13,10 @@ import {
 	deleteComment,
 	updateComment,
 } from '../controllers/posts.controllers';
+import verifyAuth from '../middlewares/auth';
+import postValidations from '../middlewares/validations/postValidations';
+import verifyPostAccess from '../middlewares/post_auth';
+import verifyCommentAccess from '../middlewares/comment_auth';
 
 const DIR = './src/posts-images';
 const storage = multer.diskStorage({
@@ -44,13 +48,13 @@ router.get('/', getAllPosts);
 router.get('/:id', getPostById);
 
 // create post
-router.post('/', upload.single('cover-imgUrl'), createPost);
+router.post('/', [verifyAuth, postValidations.postAddValidations], upload.single('cover-imgUrl'), createPost);
 
 // delete post by ID
-router.delete('/:id', deletePost);
+router.delete('/:id', [verifyAuth], deletePost);
 
 // update post by ID
-router.put('/:id', upload.single('cover-imgUrl'), updatePostInfo);
+router.put('/:id', [verifyAuth, postValidations.postEditValidations], upload.single('cover-imgUrl'), updatePostInfo);
 
 // get comments on post
 router.get('/:id/comments/', getComments);
@@ -59,12 +63,12 @@ router.get('/:id/comments/', getComments);
 router.get('/:id/comments/:cid', getCommentById);
 
 // add comment on post
-router.patch('/:id/comment/', addComment);
+router.patch('/:id/comment/', [verifyAuth], addComment);
 
 // delete comment on post
-router.patch('/:id/comment/:cid', deleteComment);
+router.patch('/:id/comment/:cid', [verifyAuth, verifyCommentAccess], deleteComment);
 
 // edit comment on post
-router.patch('/:id/editcomment/:cid', updateComment);
+router.patch('/:id/editcomment/:cid', [verifyAuth, verifyCommentAccess], updateComment);
 
 module.exports = router;
