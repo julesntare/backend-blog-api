@@ -103,7 +103,7 @@ const updateUserInfo = async (req, res) => {
 		found;
 	found = await users.findByIdAndUpdate({ _id: id }, { ...req.body });
 	if (Object.keys(req.body).length == 0) {
-		return res.status(403).json({
+		return res.status(400).json({
 			msg:
 				'Please you have to edit one or more of these(firstname, lastname, email,bio,location,links and profile-img-url)',
 		});

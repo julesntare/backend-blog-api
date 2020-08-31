@@ -46,7 +46,7 @@ describe('========== Messages APIs Tests ==========', () => {
 					cpassword: 'hUhU1!',
 				})
 				.end((err, res) => {
-					expect(res).to.have.status(403);
+					expect(res).to.have.status(400);
 					done();
 				});
 		});
@@ -62,7 +62,7 @@ describe('========== Messages APIs Tests ==========', () => {
 					cpassword: 'hUhU1!',
 				})
 				.end((err, res) => {
-					expect(res).to.have.status(403);
+					expect(res).to.have.status(400);
 					done();
 				});
 		});
@@ -78,7 +78,7 @@ describe('========== Messages APIs Tests ==========', () => {
 					cpassword: 'hUhU1!',
 				})
 				.end((err, res) => {
-					expect(res).to.have.status(403);
+					expect(res).to.have.status(400);
 					done();
 				});
 		});
@@ -94,7 +94,7 @@ describe('========== Messages APIs Tests ==========', () => {
 					cpassword: 'hUhU1!',
 				})
 				.end((err, res) => {
-					expect(res).to.have.status(403);
+					expect(res).to.have.status(400);
 					done();
 				});
 		});
@@ -110,7 +110,7 @@ describe('========== Messages APIs Tests ==========', () => {
 					cpassword: 'hUhUdsa!',
 				})
 				.end((err, res) => {
-					expect(res).to.have.status(403);
+					expect(res).to.have.status(400);
 					done();
 				});
 		});

@@ -88,7 +88,7 @@ const updatePostInfo = (req, res) => {
 	} else {
 		posts.findByIdAndUpdate({ _id: id }, { ...req.body }, (err, data) => {
 			if (err) {
-				return res.status(403).json({ msg: 'error updating' });
+				return res.status(400).json({ msg: 'error updating' });
 			}
 			res.status(200).json({ msg: 'post updated' });
 		});
