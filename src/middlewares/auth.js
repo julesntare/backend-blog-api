@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 const key = process.env.SECRET_KEY;
-const verifyUser = (req, res, next) => {
+const verifyAuth = (req, res, next) => {
 	try {
 		const token = req.headers.authorization.split(' ')[1];
 		jwt.verify(token, key);
@@ -11,4 +11,4 @@ const verifyUser = (req, res, next) => {
 	}
 };
 
-export default verifyUser;
+export default verifyAuth;
