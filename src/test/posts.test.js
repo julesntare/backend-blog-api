@@ -44,7 +44,7 @@ describe('POST /posts', () => {
 			.set('authorization', `Bearer ${token}`)
 			.send({})
 			.end((err, res) => {
-				expect(res).to.have.status(403);
+				expect(res).to.have.status(400);
 				done();
 			});
 	});
@@ -55,7 +55,7 @@ describe('POST /posts', () => {
 			.set('authorization', `Bearer ${token}`)
 			.send({ author: faker.name.firstName() + ' ' + faker.name.lastName(), desc: faker.lorem.paragraph() })
 			.end((err, res) => {
-				expect(res).to.have.status(403);
+				expect(res).to.have.status(400);
 				done();
 			});
 	});
@@ -66,7 +66,7 @@ describe('POST /posts', () => {
 			.set('authorization', `Bearer ${token}`)
 			.send({ title: '', desc: faker.lorem.paragraph() })
 			.end((err, res) => {
-				expect(res).to.have.status(403);
+				expect(res).to.have.status(400);
 				done();
 			});
 	});
@@ -131,7 +131,7 @@ describe('========== Posts APIs Tests ==========', () => {
 				.send({ desc: faker.lorem.paragraphs() })
 				.end((err, res) => {
 					if (err) return done(err);
-					expect(res).to.have.status(403);
+					expect(res).to.have.status(400);
 					done();
 				});
 		});
@@ -158,7 +158,7 @@ describe('========== Posts APIs Tests ==========', () => {
 				.send({})
 				.end((err, res) => {
 					if (err) return done(err);
-					expect(res).to.have.status(403);
+					expect(res).to.have.status(400);
 					done();
 				});
 		});
