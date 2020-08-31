@@ -8,9 +8,13 @@ import {
 	deleteUser,
 	updateUserInfo,
 	loginUser,
+	logoutUser,
 	changePassword,
 } from '../controllers/users.controllers';
 import verifyAuth from '../middlewares/auth';
+import loginSignupAuthorization from '../middlewares/login_signup_auth';
+import adminAuth from '../middlewares/admin_auth';
+import userValidations from '../middlewares/validations/userValidations';
 
 const DIR = './src/uploads';
 const storage = multer.diskStorage({
@@ -38,19 +42,22 @@ let upload = multer({
 router.get('/', getAllUsers);
 
 // get specific user by ID
-router.get('/:id', getUserById);
+router.get('/:id', [verifyAuth], getUserById);
 
 // create user
-router.post('/register', createUser);
+router.post('/register', [loginSignupAuthorization, userValidations.userAddValidations], createUser);
 
 // login user
-router.post('/login', verifyAuth, loginUser);
+router.post('/login', loginSignupAuthorization, loginUser);
+
+// logout user
+router.get('/logout', [verifyAuth], logoutUser);
 
 // delete user by ID
-router.delete('/:id', deleteUser);
+router.delete('/:id', [verifyAuth], deleteUser);
 
 // update user by ID
-router.put('/:id', upload.single('profile-img-url'), updateUserInfo);
+router.put('/:id', [verifyAuth, userValidations.userEditValidations], upload.single('profile-img-url'), updateUserInfo);
 
 // change password
 router.put('/:id/changepass', changePassword);
