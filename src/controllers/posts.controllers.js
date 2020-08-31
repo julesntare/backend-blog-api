@@ -1,43 +1,41 @@
 import posts from '../models/posts.models';
-import { v4 as uuidv4 } from 'uuid';
+import dotenv from 'dotenv';
+import {} from 'dotenv/config';
 const cloudinary = require('cloudinary').v2;
 
+dotenv.config();
 cloudinary.config({
 	cloud_name: 'julesntare',
-	api_key: '658528737163627',
-	api_secret: '_rLWat1SCgg0NMVSZ6myvZO99-Y',
+	api_key: process.env.cloudinary_API_KEY,
+	api_secret: process.env.cloudinary_API_SECRET,
 });
 
-const getAllPosts = (req, res) => {
-	res.send(posts);
+const getAllPosts = async (req, res) => {
+	const postData = await posts.find();
+	res.status(200).json(postData);
 };
 
 const getPostById = (req, res) => {
 	let id = req.params.id;
-	let post = posts.filter((post) => post.id === id);
-	if (post.length === 0) {
-		return res.status(404).json({ msg: 'post not found' });
-	}
-	res.send(post);
+	posts
+		.findById(id)
+		.then((result) => {
+			res.status(200).json(result);
+		})
+		.catch((err) => {
+			res.status(404).json({ msg: 'post not found' });
+		});
 };
 
-const createPost = (req, res) => {
+const createPost = async (req, res) => {
 	let newPost = {};
-	newPost.id = uuidv4();
 	newPost['author'] = req.body.author;
 	newPost['title'] = req.body.title;
 	newPost['desc'] = req.body.desc;
 	newPost['likes'] = 0;
 	newPost['comments'] = [];
 	newPost['state'] = req.body.state != undefined ? req.body.state : 'published';
-	newPost['created-at'] = new Date();
 
-	if (Object.keys(req.body).length === 0) {
-		return res.status(500).json({ msg: 'Provide some data' });
-	}
-	if (req.body.title == undefined || req.body.title == '') {
-		return res.status(206).json({ msg: 'provide title' });
-	}
 	if (req.file) {
 		const path = req.file.path;
 		cloudinary.uploader.upload(path, (err, image) => {
@@ -46,36 +44,32 @@ const createPost = (req, res) => {
 			fs.unlinkSync(path);
 			if (image) {
 				newPost['cover-imgUrl'] = image.url;
-				posts.push(newPost);
-				res.status(200).send(posts);
+				const post = new posts(newPost);
+				post.save();
+				res.status(201).json({ msg: 'post created' });
 			}
 		});
 	} else {
 		newPost['cover-imgUrl'] = null;
-		posts.push(newPost);
-		res.status(200).send(posts);
+		const post = new posts(newPost);
+		post.save().then((data) => {
+			res.status(201).json({ msg: 'post created', data });
+		});
 	}
 };
 
 const deletePost = (req, res) => {
 	let id = req.params.id;
-	let found = posts.find((post) => post.id === id);
-	if (found == undefined) {
-		return res.status(404).json({ msg: 'no post to delete' });
-	}
-	posts.splice(posts.indexOf(found), 1);
-	res.send(posts);
+	posts
+		.deleteOne({ _id: id })
+		.then((result) => {
+			res.status(204).send();
+		})
+		.catch((err) => res.status(404).json({ msg: 'No post to delete' }));
 };
 
 const updatePostInfo = (req, res) => {
 	let id = req.params.id;
-	let found = posts.find((post) => post.id === id);
-	if (Object.keys(req.body).length === 0) {
-		return res.status(500).json({ msg: 'Provide some data' });
-	}
-	if (found == undefined) {
-		return res.status(404).json({ msg: 'no post to edit' });
-	}
 	if (req.file) {
 		const path = req.file.path;
 		cloudinary.uploader.upload(path, (err, image) => {
@@ -83,91 +77,94 @@ const updatePostInfo = (req, res) => {
 			const fs = require('fs');
 			fs.unlinkSync(path);
 			if (image) {
-				posts.splice(posts.indexOf(found), 1, { ...found, ...req.body, [req.file.fieldname]: image.url });
-				res.status(200).json(posts);
+				posts.findByIdAndUpdate({ _id: id }, { ...req.body, [req.file.fieldname]: image.url }, (err, data) => {
+					if (err) {
+						return res.status(500).json({ msg: 'error updating' });
+					}
+					res.status(200).json({ msg: 'post updated' });
+				});
 			}
 		});
 	} else {
-		posts.splice(posts.indexOf(found), 1, { ...found, ...req.body });
-		res.status(200).json(posts);
+		posts.findByIdAndUpdate({ _id: id }, { ...req.body }, (err, data) => {
+			if (err) {
+				return res.status(403).json({ msg: 'error updating' });
+			}
+			res.status(200).json({ msg: 'post updated' });
+		});
 	}
 };
 
 const addComment = (req, res) => {
 	let id = req.params.id;
-	let found = posts.find((post) => post.id === id);
-	if (found == undefined) {
-		return res.status(500).json({ msg: 'no post to comment' });
-	}
 	if (Object.keys(req.body).length === 0) {
 		return res.status(500).json({ msg: 'provide data' });
 	}
-	found.comments.unshift({
-		id: uuidv4(),
-		'replied-at': new Date(),
-		...req.body,
-	});
-	found = posts.map((post) => ({ ...found, ...post }));
-	res.status(200).json(found);
+	posts
+		.updateOne({ _id: id }, { $push: { comments: req.body } })
+		.then((result) => {
+			res.status(200).json({ msg: 'commented added' });
+		})
+		.catch((err) => {
+			res.status(404).json({ msg: 'error adding comment' });
+		});
 };
 
 const getComments = (req, res) => {
 	let id = req.params.id;
-	let found = posts.find((post) => post.id === id);
-	if (found == undefined) {
-		return res.status(500).json({ msg: 'unavailable post' });
-	}
-	res.status(200).json({ total: found.comments.length, comments: found.comments });
+	posts
+		.findById(id)
+		.then((result) => {
+			res.status(200).json(result.comments);
+		})
+		.catch((err) => {
+			res.status(404).json({ msg: 'error' });
+		});
 };
 
 const getCommentById = (req, res) => {
 	let id = req.params.id;
 	let cid = req.params.cid;
-	let found = posts.find((post) => post.id === id);
-	let commentFound = found.comments.find((comment) => comment.id === cid);
-	if (found == undefined) {
-		return res.status(500).json({ msg: 'unavailable post' });
-	}
-	if (commentFound == undefined) {
-		return res.status(404).json({ msg: 'no comment found' });
-	}
-	res.status(200).json(commentFound);
+	posts
+		.findOne({ _id: id })
+		.select({ comments: { $elemMatch: { _id: cid } } })
+		.then((result) => {
+			res.status(200).json(result.comments[0]);
+		})
+		.catch((err) => {
+			res.status(404).json({ msg: 'not found' });
+		});
 };
 
 const deleteComment = (req, res) => {
 	let id = req.params.id;
 	let cid = req.params.cid;
-	let found = posts.find((post) => post.id === id);
-	let commentFound = found.comments.find((comment) => comment.id === cid);
-	if (found == undefined) {
-		return res.status(404).json({ msg: 'unavailable post' });
-	}
-	if (commentFound == undefined) {
-		return res.status(404).json({ msg: 'no comment found' });
-	}
-
-	found.comments.splice(found.comments[cid - 1], 1);
-	found = posts.map((post) => ({ ...found, ...post }));
-	res.status(200).json(posts);
+	posts
+		.findByIdAndUpdate(id, { $pull: { comments: { _id: cid } } })
+		.then((result) => {
+			res.status(200).json({ msg: 'comment deleted' });
+		})
+		.catch((err) => {
+			res.status(404).json({ msg: 'comment not deleted' });
+		});
 };
 
-const updateComment = (req, res) => {
+const updateComment = async (req, res) => {
 	let id = req.params.id;
 	let cid = req.params.cid;
-	let found = posts.find((post) => post.id === id);
-	let commentFound = found.comments.find((comment) => comment.id === cid);
 	if (Object.keys(req.body).length == 0) {
 		return res.status(404).json({ msg: 'provide comment' });
 	}
-	if (found == undefined) {
-		return res.status(404).json({ msg: 'unavailable post' });
-	}
-	if (commentFound == undefined) {
-		return res.status(404).json({ msg: 'no comment found' });
-	}
-	found.comments.splice(found.comments[cid - 1], 1, { ...found.comments[cid - 1], ...req.body });
-	found = posts.map((post) => ({ ...found, ...post }));
-	res.status(200).json(posts);
+	posts
+		.findOne({ _id: id })
+		.then((result) => {
+			let com = result.comments.find((comment) => comment._id == cid);
+			Object.assign(com, req.body);
+			result.save().then(() => res.status(200).json({ msg: 'Comment updated' }));
+		})
+		.catch((err) => {
+			res.status(404).json({ msg: 'Comment not updated' });
+		});
 };
 
 module.exports = {

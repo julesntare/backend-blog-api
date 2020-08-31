@@ -1,28 +1,33 @@
 import users from '../models/users.models';
-import { v4 as uuidv4 } from 'uuid';
+import dotenv from 'dotenv';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import {} from 'dotenv/config';
 const cloudinary = require('cloudinary').v2;
 
+dotenv.config();
 cloudinary.config({
 	cloud_name: 'julesntare',
-	api_key: '658528737163627',
-	api_secret: '_rLWat1SCgg0NMVSZ6myvZO99-Y',
+	api_key: process.env.cloudinary_API_KEY,
+	api_secret: process.env.cloudinary_API_SECRET,
 });
 
 const { SECRET_KEY } = process.env;
-const getAllUsers = (req, res) => {
-	res.status(200).json(users);
+const getAllUsers = async (req, res) => {
+	const userData = await users.find();
+	res.status(200).json(userData);
 };
 
 const getUserById = (req, res) => {
 	let id = req.params.id;
-	let user = users.filter((user) => user.id === id);
-	if (user.length === 0) {
-		return res.status(404).json({ msg: 'User Not found' });
-	}
-	res.status(200).json(user);
+	users
+		.findById(id)
+		.then((result) => {
+			res.status(200).json(result);
+		})
+		.catch((e) => {
+			res.status(404).json({ msg: 'User Not found' });
+		});
 };
 
 const getHashedPassword = (password) => {
@@ -31,67 +36,80 @@ const getHashedPassword = (password) => {
 	return hash;
 };
 
-const createUser = (req, res) => {
+const createUser = async (req, res) => {
 	let newUser = {};
 	let { firstname, lastname, email, password } = req.body;
-
-	const checkUser = users.filter((user) => user.email === email);
-	if (checkUser.length > 0) {
-		return res.status(409).json({ message: 'Email already in use' });
+	const checkUser = await users.findOne({ email: email });
+	try {
+		if (checkUser != null) {
+			return res.status(409).json({ message: 'Email already in use' });
+		}
+		let level = email == 'julesntare@gmail.com' ? 1 : 2;
+		let token = jwt.sign({ email, level: level }, SECRET_KEY, { algorithm: 'HS256' });
+		newUser.firstname = firstname;
+		newUser.lastname = lastname;
+		newUser.email = email;
+		newUser.password = getHashedPassword(password);
+		newUser['profile-img-url'] = null;
+		newUser.noOfEntries = 1;
+		newUser.level = level;
+		const user = new users(newUser);
+		user.save().then((data) => {
+			res.status(200).json({ msg: 'User Added Successfully', data, token });
+		});
+	} catch (e) {
+		res.status(500).json({ msg: 'something went wrong!!!, try again' });
 	}
-
-	if (Object.keys(req.body).length === 0) {
-		return res.status(500).json({ msg: 'Provide some data' });
-	}
-	let token = jwt.sign({ email, level: 2 }, SECRET_KEY, { algorithm: 'HS256' });
-	newUser.id = uuidv4();
-	newUser.firstname = firstname;
-	newUser.lastname = lastname;
-	newUser.email = email;
-	newUser.password = getHashedPassword(password);
-	newUser['profile-img-url'] = null;
-	newUser.noOfEntries = 1;
-	newUser.level = 2;
-	newUser.joined = new Date();
-
-	users.push(newUser);
-	res.json({ msg: 'User Added Successfully', token });
 };
 
-const loginUser = (req, res) => {
-	let { email, password } = req.body;
-	password = getHashedPassword(password);
-	let loginInfo = users.filter((user) => user.email === email);
-	email = loginInfo[0].email;
-	let level = loginInfo[0].level;
-	let token = jwt.sign({ email, level }, SECRET_KEY, { algorithm: 'HS256' });
-	if (loginInfo.length === 0) {
-		return res.status(404).json({ message: 'User not Found' });
+const loginUser = async (req, res) => {
+	let { email, password } = req.body,
+		level,
+		token,
+		loginInfo;
+	if (Object.keys(req.body).length == 0) {
+		return res.status(500).json({ message: 'Please provide data' });
 	}
-	if (getHashedPassword(loginInfo[0].password) !== getHashedPassword(password)) {
+	password = getHashedPassword(password);
+	loginInfo = await users.findOne({ email: email });
+	if (loginInfo === null) {
+		return res.status(404).json({ message: 'Invalid Email' });
+	}
+	level = loginInfo.level;
+	token = jwt.sign({ email, level }, SECRET_KEY, { algorithm: 'HS256' });
+	if (getHashedPassword(loginInfo.password) !== getHashedPassword(password)) {
 		return res.status(404).json({ message: 'Invalid Password' });
 	}
-	res.status(200).json({ data: loginInfo, token });
+	res.header('Authorization', token).status(200).json({ data: loginInfo, token });
 };
 
-const deleteUser = (req, res) => {
+const logoutUser = (req, res) => {
+	console.log('req.logout()');
+	req.logout();
+	res.json({ loggedOut: req.isAuthenticated() });
+};
+
+const deleteUser = async (req, res) => {
 	let id = req.params.id;
-	let found = users.find((user) => user.id === id);
-	if (found == undefined) {
+	let found = await users.deleteOne({ _id: id });
+	if (found == null) {
 		return res.status(404).json({ msg: 'No user to delete' });
 	}
-	users.splice(users.indexOf(found), 1);
-	res.json(users);
+	res.status(204).send();
 };
 
-const updateUserInfo = (req, res) => {
-	let id = req.params.id;
-	let found = users.find((user) => user.id === id);
-	if (found === undefined) {
-		return res.status(500).json({ msg: 'No user to edit' });
+const updateUserInfo = async (req, res) => {
+	let id = req.params.id,
+		found;
+	found = await users.findByIdAndUpdate({ _id: id }, { ...req.body });
+	if (Object.keys(req.body).length == 0) {
+		return res.status(403).json({
+			msg:
+				'Please you have to edit one or more of these(firstname, lastname, email,bio,location,links and profile-img-url)',
+		});
 	}
-	if (req.body.password) {
-		return res.status(404).json({ msg: "can't change password" });
+	if (found === null) {
+		return res.status(404).json({ msg: 'No user to edit' });
 	}
 	if (req.file) {
 		const path = req.file.path;
@@ -100,17 +118,15 @@ const updateUserInfo = (req, res) => {
 			const fs = require('fs');
 			fs.unlinkSync(path);
 			if (image) {
-				users.splice(users.indexOf(found), 1, {
-					...found,
-					...req.body,
-					[req.file.fieldname]: image.url,
-				});
+				found['profile-img-url'] = image.url;
+				found.save();
+				res.status(200).json({ msg: 'User updated' });
 			}
 		});
 	} else {
-		users.splice(users.indexOf(found), 1, { ...found, ...req.body });
+		found.save();
+		res.status(200).json({ msg: 'User updated' });
 	}
-	res.status(200).json(users);
 };
 
 const changePassword = (req, res) => {
@@ -141,5 +157,6 @@ module.exports = {
 	deleteUser,
 	updateUserInfo,
 	loginUser,
+	logoutUser,
 	changePassword,
 };
