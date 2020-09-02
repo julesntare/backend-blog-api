@@ -1,22 +1,17 @@
 const express = require('express');
 const router = express.Router();
 let multer = require('multer');
+import { getAllPosts, getPostById, createPost, deletePost, updatePostInfo } from '../controllers/posts.controllers';
 import {
-	getAllPosts,
-	getPostById,
-	createPost,
-	deletePost,
-	updatePostInfo,
 	addComment,
 	getComments,
 	getCommentById,
 	deleteComment,
 	updateComment,
-} from '../controllers/posts.controllers';
+} from '../controllers/comments.controllers';
 import verifyAuth from '../middlewares/auth';
 import postValidations from '../middlewares/validations/postValidations';
 import verifyPostAccess from '../middlewares/post_auth';
-import verifyCommentAccess from '../middlewares/comment_auth';
 
 const DIR = './src/posts-images';
 const storage = multer.diskStorage({
@@ -51,10 +46,15 @@ router.get('/:id', getPostById);
 router.post('/', [verifyAuth, postValidations.postAddValidations], upload.single('cover-imgUrl'), createPost);
 
 // delete post by ID
-router.delete('/:id', [verifyAuth], deletePost);
+router.delete('/:id', deletePost);
 
 // update post by ID
-router.put('/:id', [verifyAuth, postValidations.postEditValidations], upload.single('cover-imgUrl'), updatePostInfo);
+router.put(
+	'/:id',
+	[verifyPostAccess, postValidations.postEditValidations],
+	upload.single('cover-imgUrl'),
+	updatePostInfo
+);
 
 // get comments on post
 router.get('/:id/comments/', getComments);
@@ -63,12 +63,12 @@ router.get('/:id/comments/', getComments);
 router.get('/:id/comments/:cid', getCommentById);
 
 // add comment on post
-router.patch('/:id/comment/', [verifyAuth], addComment);
+router.post('/:id/comment/', [verifyAuth], addComment);
 
 // delete comment on post
-router.patch('/:id/comment/:cid', [verifyAuth, verifyCommentAccess], deleteComment);
+router.delete('/:id/comment/:cid', [verifyAuth], deleteComment);
 
 // edit comment on post
-router.patch('/:id/editcomment/:cid', [verifyAuth, verifyCommentAccess], updateComment);
+router.put('/:id/editcomment/:cid', [verifyAuth], updateComment);
 
 module.exports = router;

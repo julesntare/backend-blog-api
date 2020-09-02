@@ -10,6 +10,7 @@ cloudinary.config({
 	api_secret: process.env.cloudinary_API_SECRET,
 });
 
+// Posts controllers
 const getAllPosts = async (req, res) => {
 	const postData = await posts.find();
 	res.status(200).json(postData);
@@ -95,87 +96,10 @@ const updatePostInfo = (req, res) => {
 	}
 };
 
-const addComment = (req, res) => {
-	let id = req.params.id;
-	if (Object.keys(req.body).length === 0) {
-		return res.status(500).json({ msg: 'provide data' });
-	}
-	posts
-		.updateOne({ _id: id }, { $push: { comments: req.body } })
-		.then((result) => {
-			res.status(200).json({ msg: 'commented added' });
-		})
-		.catch((err) => {
-			res.status(404).json({ msg: 'error adding comment' });
-		});
-};
-
-const getComments = (req, res) => {
-	let id = req.params.id;
-	posts
-		.findById(id)
-		.then((result) => {
-			res.status(200).json(result.comments);
-		})
-		.catch((err) => {
-			res.status(404).json({ msg: 'error' });
-		});
-};
-
-const getCommentById = (req, res) => {
-	let id = req.params.id;
-	let cid = req.params.cid;
-	posts
-		.findOne({ _id: id })
-		.select({ comments: { $elemMatch: { _id: cid } } })
-		.then((result) => {
-			res.status(200).json(result.comments[0]);
-		})
-		.catch((err) => {
-			res.status(404).json({ msg: 'not found' });
-		});
-};
-
-const deleteComment = (req, res) => {
-	let id = req.params.id;
-	let cid = req.params.cid;
-	posts
-		.findByIdAndUpdate(id, { $pull: { comments: { _id: cid } } })
-		.then((result) => {
-			res.status(200).json({ msg: 'comment deleted' });
-		})
-		.catch((err) => {
-			res.status(404).json({ msg: 'comment not deleted' });
-		});
-};
-
-const updateComment = async (req, res) => {
-	let id = req.params.id;
-	let cid = req.params.cid;
-	if (Object.keys(req.body).length == 0) {
-		return res.status(404).json({ msg: 'provide comment' });
-	}
-	posts
-		.findOne({ _id: id })
-		.then((result) => {
-			let com = result.comments.find((comment) => comment._id == cid);
-			Object.assign(com, req.body);
-			result.save().then(() => res.status(200).json({ msg: 'Comment updated' }));
-		})
-		.catch((err) => {
-			res.status(404).json({ msg: 'Comment not updated' });
-		});
-};
-
 module.exports = {
 	getAllPosts,
 	getPostById,
 	createPost,
 	deletePost,
 	updatePostInfo,
-	addComment,
-	getComments,
-	getCommentById,
-	deleteComment,
-	updateComment,
 };

@@ -10,7 +10,7 @@ const verifyLogin = (req, res, next) => {
 		}
 		next();
 	} catch (error) {
-		next();
+		return res.status(401).json({ message: 'Something went Wrong!!!' });
 	}
 };
 

@@ -8,8 +8,6 @@ import {
 	deleteUser,
 	updateUserInfo,
 	loginUser,
-	logoutUser,
-	changePassword,
 } from '../controllers/users.controllers';
 import verifyAuth from '../middlewares/auth';
 import loginSignupAuthorization from '../middlewares/login_signup_auth';
@@ -39,7 +37,7 @@ let upload = multer({
 });
 
 // get all users
-router.get('/', getAllUsers);
+router.get('/', adminAuth, getAllUsers);
 
 // get specific user by ID
 router.get('/:id', [verifyAuth], getUserById);
@@ -50,16 +48,10 @@ router.post('/register', [loginSignupAuthorization, userValidations.userAddValid
 // login user
 router.post('/login', loginSignupAuthorization, loginUser);
 
-// logout user
-router.get('/logout', [verifyAuth], logoutUser);
-
 // delete user by ID
 router.delete('/:id', [verifyAuth], deleteUser);
 
 // update user by ID
 router.put('/:id', [verifyAuth, userValidations.userEditValidations], upload.single('profile-img-url'), updateUserInfo);
-
-// change password
-router.put('/:id/changepass', changePassword);
 
 module.exports = router;
