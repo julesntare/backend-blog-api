@@ -23,6 +23,7 @@ const getUserById = (req, res) => {
 	users
 		.findById(id)
 		.then((result) => {
+			if (result == null) return res.status(404).json({ msg: 'Invalid user' });
 			res.status(200).json(result);
 		})
 		.catch((e) => {
@@ -68,7 +69,7 @@ const loginUser = async (req, res) => {
 		token,
 		loginInfo;
 	if (Object.keys(req.body).length == 0) {
-		return res.status(500).json({ message: 'Please provide data' });
+		return res.status(409).json({ message: 'Please provide data' });
 	}
 	password = getHashedPassword(password);
 	loginInfo = await users.findOne({ email: email });
@@ -80,22 +81,15 @@ const loginUser = async (req, res) => {
 	if (getHashedPassword(loginInfo.password) !== getHashedPassword(password)) {
 		return res.status(404).json({ message: 'Invalid Password' });
 	}
-	res.header('Authorization', token).status(200).json({ data: loginInfo, token });
-};
-
-const logoutUser = (req, res) => {
-	console.log('req.logout()');
-	req.logout();
-	res.json({ loggedOut: req.isAuthenticated() });
+	res.status(200).json({ data: loginInfo, token });
 };
 
 const deleteUser = async (req, res) => {
 	let id = req.params.id;
-	let found = await users.deleteOne({ _id: id });
-	if (found == null) {
-		return res.status(404).json({ msg: 'No user to delete' });
-	}
-	res.status(204).send();
+	users.findOneAndDelete({ _id: id }, (err) => {
+		if (err) return res.status(404).json({ msg: 'Invalid id' });
+		res.status(204).send();
+	});
 };
 
 const updateUserInfo = async (req, res) => {
@@ -129,27 +123,6 @@ const updateUserInfo = async (req, res) => {
 	}
 };
 
-const changePassword = (req, res) => {
-	let id = req.params.id;
-	let { currpass, newpass, cpass } = req.body;
-	let found = users.find((user) => user.id === id);
-	if (Object.keys(req.body).length === 0) {
-		return res.status(500).json({ msg: 'Provide some data' });
-	}
-	if (found === undefined) {
-		return res.status(500).json({ msg: 'No user found' });
-	}
-	if (getHashedPassword(currpass) != found.password) {
-		return res.status(404).json({ msg: 'invalid current password' });
-	}
-	if (newpass != cpass) {
-		return res.status(500).json({ msg: 'new password not match' });
-	}
-	req.body.password = getHashedPassword(newpass);
-	users.splice(users.indexOf(found), 1, { ...found, ...req.body });
-	res.status(200).json(found);
-};
-
 module.exports = {
 	getAllUsers,
 	getUserById,
@@ -157,6 +130,4 @@ module.exports = {
 	deleteUser,
 	updateUserInfo,
 	loginUser,
-	logoutUser,
-	changePassword,
 };
