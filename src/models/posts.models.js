@@ -6,7 +6,6 @@ const schema = mongoose.Schema({
 	desc: String,
 	'cover-imgUrl': String,
 	likes: Number,
-	comments: [{ author: String, desc: String, 'replied-at': { type: Date, default: new Date() } }],
 	state: String,
 	'created-at': { type: Date, default: new Date() },
 });
